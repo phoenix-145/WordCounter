@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Ns33uVL6zocaRHgM1HB+etd2nHLn/XRO8cSCrKDEEAwJYG7i2I3Snt87N4RGBx5xU1P8soKp82DYcR5bZPvqtw==",
+  "dgSpecHash": "t9u2h9AuPuIjXUv/S9iX05p1l3QP8HQ1GoIj2T2X8AOx/gvulNpTPQW00WBImifBwdB++1eBFsRc+6tPrLn0UA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\haris\\Documents\\Personal_Projects\\WordCounter\\WordCOunter\\WordCounter.csproj",
+  "projectFilePath": "C:\\Users\\haris\\Documents\\Personal_Projects\\WordCounter\\WordCounter.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\haris\\.nuget\\packages\\microsoft.netcore.app.ref\\6.0.25\\microsoft.netcore.app.ref.6.0.25.nupkg.sha512",
     "C:\\Users\\haris\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\6.0.25\\microsoft.windowsdesktop.app.ref.6.0.25.nupkg.sha512",

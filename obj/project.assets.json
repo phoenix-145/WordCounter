@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\haris\\Documents\\Personal_Projects\\WordCounter\\WordCounter\\WordCounter.csproj",
+      "projectUniqueName": "C:\\Users\\haris\\Documents\\Personal_Projects\\WordCounter\\WordCounter.csproj",
       "projectName": "WordCounter",
-      "projectPath": "C:\\Users\\haris\\Documents\\Personal_Projects\\WordCounter\\WordCounter\\WordCounter.csproj",
+      "projectPath": "C:\\Users\\haris\\Documents\\Personal_Projects\\WordCounter\\WordCounter.csproj",
       "packagesPath": "C:\\Users\\haris\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\haris\\Documents\\Personal_Projects\\WordCounter\\WordCounter\\obj\\",
+      "outputPath": "C:\\Users\\haris\\Documents\\Personal_Projects\\WordCounter\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
