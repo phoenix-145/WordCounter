@@ -88,7 +88,8 @@ namespace WordCounter
                 {
                     writer.WriteLine($"{word.Key} : {word.Value}");
                 } 
-            } 
+            }
+            SlowPrintingText.SlowPrintText($"The output has been successfully written in {FileToWriteTo}."); 
         }
     }
     
