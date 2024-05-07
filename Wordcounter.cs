@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace WordCounter
 {
@@ -8,14 +9,19 @@ namespace WordCounter
         public static void GetFileLocation()
         {
             string input;
+            bool isfilevalid;
             
             do
             {
-                Console.Write("Enter the file path (The file must be a text file.) or enter 0 to exit : ");
+                isfilevalid = true;
+
+                Console.Write("\nEnter the file path (The file must be a text file.) or enter 0 to exit : ");
                 input = Console.ReadLine()!;
+
                 if (input == null || input == "")
                 {
-                    Console.WriteLine("\nInvalid input.");
+                    Console.WriteLine($"\nInvalid input.\n");
+                    isfilevalid = false;
                 }
                 else if(input == "0")
                 {
@@ -23,19 +29,25 @@ namespace WordCounter
                 }
                 else if(!File.Exists(input))
                 {
-                    Console.WriteLine("\nFile not found.");
+                    Console.WriteLine("\nFile not found.\n");
+                    isfilevalid = false;
+                }
+                else if(GetFileType(input) == false.ToString() || GetFileType(input) != ".txt")
+                {
+                    Console.WriteLine("\nFile is not a text file.");
+                    isfilevalid = false;
                 }
 
-            }while(input == null || input == "" || !File.Exists(input));
+            }while(isfilevalid == false);
 
-            ReadFromFile(input);
+            ReadFromFile(input!);
             WriteToFile(); 
         }
         private static void ReadFromFile(string path)
         {
             using(StreamReader reader = new StreamReader(path))
             {
-                string rawtext = reader.ReadToEnd();
+                string rawtext = reader.ReadToEnd().ToLower();
                 string filtertext = Regex.Replace(rawtext, @"[^a-zA-Z0-9\s']", "");
                 string[] split_text = filtertext.Split(" ", StringSplitOptions.RemoveEmptyEntries);
 
@@ -56,7 +68,7 @@ namespace WordCounter
         {
             string FileToWriteTo;
 
-            Console.Write("Enter your output file path(default : OutPut.txt) : ");
+            Console.Write("Enter your output file path(default : Output.txt) : ");
             FileToWriteTo = Console.ReadLine()!;
 
             if(FileToWriteTo == "")
@@ -66,7 +78,7 @@ namespace WordCounter
             if(!File.Exists(FileToWriteTo))
             {
                 string prompt = @"The stated file does not exist. Would you like to enter the path again or use default path (TextFiles\Output.txt) ? ";
-                string[] options = {"Enter Again", "Use default path"};
+                string[] options = {"Enter Again", "Use default path", "Create a new text file at the specified path"};
                 Menu menu = new Menu(prompt, options);
                 int input = menu.Run();
 
@@ -74,9 +86,12 @@ namespace WordCounter
                 {
                     case 0:
                         WriteToFile();
-                        break;
+                        return;
                     case 1:
                         FileToWriteTo = @"TextFiles\Output.txt";
+                        break;
+                    case 3:
+                        FileToWriteTo = FileToWriteTo + ".txt";
                         break;
                 }
             }
@@ -90,6 +105,21 @@ namespace WordCounter
                 } 
             }
             SlowPrintingText.SlowPrintText($"The output has been successfully written in {FileToWriteTo}."); 
+        }
+        private static string GetFileType(string input)
+        {
+            string filetype;
+            try
+            {
+                FileInfo fileInfo= new FileInfo(input);
+                filetype = fileInfo.Extension;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return false.ToString();
+            }
+            return filetype;
         }
     }
     
