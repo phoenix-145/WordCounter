@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Reflection.Metadata;
 
 namespace WordCounter
 {
