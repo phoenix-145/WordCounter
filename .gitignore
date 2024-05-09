@@ -1,4 +1,4 @@
-*Ignore unnecessary build files*
 bin/
 obj/
 WordCounter.sln
+test.txt
