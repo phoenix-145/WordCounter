@@ -1,4 +1,4 @@
+#Remove unnecessary build and VSC files#
 bin/
 obj/
 WordCounter.sln
-test.txt
