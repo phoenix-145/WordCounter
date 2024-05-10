@@ -2,11 +2,11 @@
 {
     class Program
     {
-        public static void Main()
+        public static async Task Main()
         {
-            Menu();
+            await Menu();
         }
-        private static void Menu()
+        private static async Task Menu()
         {
             string prompt= "What would you like to do ?";
             string[] options = {"Count the number of words in a text file", "Function 2", "Function 3"};
@@ -17,6 +17,9 @@
             {
                 case 0:
                     Wordcounter.GetFileLocation();
+                    break;
+                case 1:
+                    await OpensubtitlesAPI.MakeConnection();
                     break;
             }
         }
