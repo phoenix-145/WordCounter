@@ -91,20 +91,30 @@ namespace WordCounter
                     case 1:
                         FileToWriteTo = @"TextFiles\Output.txt";
                         break;
-                    case 3:
-                        FileToWriteTo = FileToWriteTo + ".txt";
+                    case 2:
+                        FileToWriteTo += ".txt";
                         break;
                 }
             }
 
-            using(StreamWriter writer = new StreamWriter(FileToWriteTo))
+            try
             {
-                var OrderedWordsWithCount = WordsWithCount.OrderByDescending(x => x.Value); 
-                foreach(var word in OrderedWordsWithCount)
+                using(StreamWriter writer = new StreamWriter(FileToWriteTo))
                 {
-                    writer.WriteLine($"{word.Key} : {word.Value}");
-                } 
+                    var OrderedWordsWithCount = WordsWithCount.OrderByDescending(x => x.Value); 
+                    foreach(var word in OrderedWordsWithCount)
+                    {
+                        writer.WriteLine($"{word.Key} : {word.Value}");
+                    } 
+                }
             }
+            catch(Exception ex)
+            {
+                Console.WriteLine("\nSomething wrong happened : " + ex.Message);
+                WriteToFile();
+                return;
+            }
+                
             SlowPrintingText.SlowPrintText($"The output has been successfully written in {FileToWriteTo}."); 
         }
         private static string GetFileType(string input)
