@@ -1,5 +1,4 @@
-
-public class SlowPrintingText
+public static class SlowPrintingText
 {
     public static void SlowPrintText(string text)
     {

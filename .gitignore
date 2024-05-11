@@ -3,3 +3,4 @@ bin/
 obj/
 WordCounter.sln
 .vscode/
+app.config
