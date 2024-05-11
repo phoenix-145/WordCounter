@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
 using System.Configuration;
+using System.Text.Json.Nodes;
+using System.Text.Json;
 
 namespace WordCounter
 {
@@ -10,22 +12,27 @@ namespace WordCounter
         private static readonly string OpensubtitlesAPI_Username = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Username")!;
         private static readonly string OpensubtitlesAPI_Password = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Password")!;
         private static readonly string OpensubtitlesLoginURL = "https://api.opensubtitles.com/api/v1/login";
+        private static readonly string OpensubtitlesDownloadURL = "https://api.opensubtitles.com/api/v1/download";
         public static async Task MakeConnection()
         {
-            await Login();
-            Console.ReadLine();
+            string User_token = await Login();
+            if(string.IsNullOrEmpty(User_token))
+            {
+                SlowPrintingText.SlowPrintText("Error, something went wrong during login. Program exiting.");
+                return;
+            }
 
             var client = httpClient;
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Post,
-                RequestUri = new Uri("https://api.opensubtitles.com/api/v1/download"),
+                RequestUri = new Uri(OpensubtitlesDownloadURL),
                 Headers = 
                 {
-                    { "User-Agent", "test, v1" },
+                    { "User-Agent", "WordCounter/1.0" },
                     { "Accept", "application/json" },
-                    { "Authorization", "Bearer H891Ie2XKDNfjraQ8XewgPjt19qw1FSB" },
-                    { "Api-Key", "H891Ie2XKDNfjraQ8XewgPjt19qw1FSB" }
+                    { "Authorization", $"Bearer {User_token}" },
+                    { "Api-Key", $"{OpensubtitlesAPI_Key}" }
                 },
                 Content = new StringContent("{\n\"file_id\": 123\n}")
                 {
@@ -48,7 +55,7 @@ namespace WordCounter
                 Console.WriteLine(body);
             }
         }
-        private static async Task Login()
+        private static async Task<string> Login()
         {
             var client = httpClient;
             var request = new HttpRequestMessage
@@ -69,12 +76,28 @@ namespace WordCounter
                     }
                 }
             };
-            using (var response = await client.SendAsync(request))
+
+            using var response = await client.SendAsync(request);
+            if (response.IsSuccessStatusCode)
             {
-                response.EnsureSuccessStatusCode();
-                var body = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(body);
-                Console.Read();
+                var response_body = await response.Content.ReadAsStringAsync();
+
+                if (!string.IsNullOrEmpty(response_body))
+                {
+                    Login login_response = JsonSerializer.Deserialize<Login>(response_body)!;
+                    SlowPrintingText.SlowPrintText($"Successfully logged into {OpensubtitlesAPI_Username}. \nYou have {login_response.user!.allowed_downloads} downloads left on this account.");
+                    return login_response.token!;
+                }
+                else
+                {
+                    SlowPrintingText.SlowPrintText("Error. Something went wrong.");
+                    return null!;
+                }
+            }
+            else
+            {
+                SlowPrintingText.SlowPrintText("Error. Something went wrong. " + response.StatusCode);
+                return null!;
             }
         }
     }
