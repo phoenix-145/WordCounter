@@ -19,9 +19,13 @@
                     Wordcounter.GetFileLocation();
                     break;
                 case 1:
-                    await OpensubtitlesAPI.MakeConnection();
+                    await TmdbAPI.GetMovieName();
                     break;
             }
+        }
+        public static class HttpClientFactory
+        {
+            public static readonly HttpClient httpClient = new();
         }
     }
 
