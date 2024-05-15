@@ -1,4 +1,4 @@
-public static class SlowPrintingText
+public class SlowPrintingText
 {
     public static void SlowPrintText(string text)
     {
@@ -8,5 +8,6 @@ public static class SlowPrintingText
             Thread.Sleep(20);
         }
         Thread.Sleep(100);
+        Console.WriteLine("");
     }
 }
