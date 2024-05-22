@@ -10,19 +10,21 @@ namespace WordCounter
         public static void GetFileLocation()
         {
             string input;
-            bool isfilevalid;
+            bool isfilepathvalid;
             
             do
             {
-                isfilevalid = true;
+                isfilepathvalid = true;
 
+                Console.Clear();
+                Console.WriteLine(AsciiArt.LocalwordcounterArt);
                 Console.Write("\nEnter the file path (The file must be a text file.) or enter 0 to exit : ");
                 input = Console.ReadLine()!;
 
                 if (input == null || input == "")
                 {
-                    Console.WriteLine($"\nInvalid input.\n");
-                    isfilevalid = false;
+                    SlowPrintingText.SlowPrintText($"Invalid input.\n");
+                    isfilepathvalid = false;
                 }
                 else if(input == "0")
                 {
@@ -30,16 +32,16 @@ namespace WordCounter
                 }
                 else if(!File.Exists(input))
                 {
-                    Console.WriteLine("\nFile not found.\n");
-                    isfilevalid = false;
+                    SlowPrintingText.SlowPrintText("File not found.\n");
+                    isfilepathvalid = false;
                 }
                 else if(GetFileType(input) == false.ToString() || GetFileType(input) != ".txt")
                 {
-                    Console.WriteLine("\nFile is not a text file.");
-                    isfilevalid = false;
+                    SlowPrintingText.SlowPrintText("File is not a text file.");
+                    isfilepathvalid = false;
                 }
 
-            }while(isfilevalid == false);
+            }while(isfilepathvalid == false);
 
             ReadFromFile(input!);
             WriteToFile(); 
@@ -51,6 +53,11 @@ namespace WordCounter
                 string rawtext = reader.ReadToEnd().ToLower();
                 string filtertext = Regex.Replace(rawtext, @"[^a-zA-Z0-9\s']", "");
                 string[] split_text = filtertext.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                foreach (string line in split_text)
+                {
+                    Console.WriteLine(line);
+                }
+                Console.ReadLine();
 
                 foreach(string word in split_text)
                 {
