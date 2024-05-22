@@ -1,3 +1,4 @@
+using System.Globalization;
 using static System.Console;
 public class Menu
 {
@@ -16,6 +17,10 @@ public class Menu
         WriteLine(Prompt);
         for(int i = 0; i < Options.Length; i++)
         {
+            if(i > Options.Length - 1)
+            {
+                break;
+            }
             string prefix;
             
             if(i == SelectedIndex)
@@ -27,18 +32,19 @@ public class Menu
             else{prefix = "  ";ForegroundColor = ConsoleColor.White; BackgroundColor = ConsoleColor.Black;}
             WriteLine($"{prefix} " + $"{Options[i]}");
         }
+
         ResetColor();
     }
-    public int Run()
+    public dynamic Run()
     {
         ConsoleKey consoleKey;
         do
         {
             CursorVisible = false;
             DisplayForOptions();
-            SetCursorPosition(0, GetCursorPosition().Top - (Options.Length + 1));
             ConsoleKeyInfo keyInfo = ReadKey(false);
             consoleKey = keyInfo.Key;
+            SetCursorPosition(0, GetCursorPosition().Top - (Options.Length + 1));
             if (consoleKey == ConsoleKey.UpArrow)
             {
                 SelectedIndex--;
@@ -48,11 +54,13 @@ public class Menu
             {
                 SelectedIndex++;
                 if (SelectedIndex == Options.Length){SelectedIndex = 0;}
-            }
+            }   
         }
-        while(consoleKey != ConsoleKey.Enter);
-        SetCursorPosition(0, GetCursorPosition().Top + (Options.Length + 1));
+        while(consoleKey != ConsoleKey.Enter && consoleKey != ConsoleKey.Spacebar);
+        SetCursorPosition(0, GetCursorPosition().Top + Options.Length + 1);
         CursorVisible = true;
+        if(consoleKey == ConsoleKey.Spacebar)
+        {return NavigationActions.Exit;}
         return SelectedIndex;
     }
 }

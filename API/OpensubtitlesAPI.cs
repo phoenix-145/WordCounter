@@ -7,13 +7,58 @@ namespace WordCounter
 {
     public class OpensubtitlesAPI
     {
-        internal static readonly HttpClient httpClient= HttpClientFactory.httpClient;
-        internal static readonly string OpensubtitlesAPI_Key = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Key")!;
-        internal static readonly string OpensubtitlesAPI_Username = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Username")!;
-        internal static readonly string OpensubtitlesAPI_Password = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Password")!;
-        internal static readonly string OpensubtitlesLoginURL = "https://api.opensubtitles.com/api/v1/login";
-        internal static readonly string OpensubtitlesDownloadURL = "https://api.opensubtitles.com/api/v1/download";
-        public static async Task MakeConnection()
+        private static readonly HttpClient httpClient= HttpClientFactory.httpClient;
+        private static readonly string OpensubtitlesAPI_Key = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Key")!;
+        private static readonly string OpensubtitlesAPI_Username = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Username")!;
+        private static readonly string OpensubtitlesAPI_Password = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Password")!;
+        private static readonly string OpensubtitlesLoginURL = "https://api.opensubtitles.com/api/v1/login";
+        private static readonly string OpensubtitlesDownloadURL = "https://api.opensubtitles.com/api/v1/download";
+        private static readonly string Opensubtitles_MovieIdURL = "https://api.opensubtitles.com/api/v1/subtitles?tmdb_id=";
+        
+        internal static async Task<Subtitles> GetSubtitlesId(int TMDB_MovieId, string TMDB_MovieName)
+        {
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri(Opensubtitles_MovieIdURL + TMDB_MovieId),
+                Headers = 
+                {
+                    { "User-Agent", "WordCounter/1.0" },
+                    { "Api-Key", $"{OpensubtitlesAPI_Key}" },
+                }
+            };
+
+            using var response = await httpClient.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                var response_body = await response.Content.ReadAsStringAsync();
+                if(!string.IsNullOrEmpty(response_body))
+                {
+                    Subtitles subtitles = JsonSerializer.Deserialize<Subtitles>(response_body)!;
+                    if(subtitles.data!.Length > 0)
+                    {
+                        return subtitles;
+                    }
+                    else
+                    {
+                        SlowPrintingText.SlowPrintText($"No subtitles for {TMDB_MovieName} found. Press Enter to continue.");
+                        Console.ReadLine();
+                        return null!;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("The server returned a bad response.");
+                    return null!;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Error. Something went wrong when retrieving the subtitles Id.");
+                return null!;
+            }
+        }
+        internal static async Task LoginAndDownloadSubtitles(string SubtitlesId)
         {
             string User_token = await Login();
 
@@ -23,7 +68,6 @@ namespace WordCounter
                 return;
             }
 
-            var client = httpClient;
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Post,
@@ -35,7 +79,7 @@ namespace WordCounter
                     { "Authorization", $"Bearer {User_token}" },
                     { "Api-Key", $"{OpensubtitlesAPI_Key}" }
                 },
-                Content = new StringContent("{\n\"file_id\": 123\n}")
+                Content = new StringContent($"{{\n\"file_id\": {SubtitlesId}\n}}")
                 {
                     Headers = 
                     {
@@ -44,7 +88,7 @@ namespace WordCounter
                 }
             };
 
-            using var response = await client.SendAsync(request);
+            using var response = await httpClient.SendAsync(request);
             if(response.IsSuccessStatusCode)
             {
                 var response_body = await response.Content.ReadAsStringAsync();
@@ -71,7 +115,6 @@ namespace WordCounter
         }
         private static async Task<string> Login()
         {
-            var client = httpClient;
             var request = new HttpRequestMessage
             {
                 Method= HttpMethod.Post,
@@ -91,7 +134,7 @@ namespace WordCounter
                 }
             };
 
-            using var response = await client.SendAsync(request);
+            using var response = await httpClient.SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
                 var response_body = await response.Content.ReadAsStringAsync();

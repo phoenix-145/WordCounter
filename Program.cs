@@ -8,9 +8,12 @@
         }
         private static async Task Menu()
         {
+            Console.Clear();
+            Console.WriteLine(AsciiArt.MainMenuArt);
+
             string prompt= "What would you like to do ?";
-            string[] options = {"Count the number of words in a text file", "Function 2", "Function 3"};
-            Menu menu= new Menu(prompt, options);
+            string[] options = {"Count the number of words in a local text file", "Search and download the movie script online", "Function 3"};
+            Menu menu= new(prompt, options);
             int SelectedOption = menu.Run();
 
             switch (SelectedOption)
@@ -19,7 +22,7 @@
                     Wordcounter.GetFileLocation();
                     break;
                 case 1:
-                    await TmdbAPI.GetMovieName();
+                    await FetchMovieScript.GetMovieName();
                     break;
             }
         }
