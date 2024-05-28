@@ -8,14 +8,63 @@ namespace WordCounter
     public class OpensubtitlesAPI
     {
         private static readonly HttpClient httpClient= HttpClientFactory.httpClient;
-        private static readonly string OpensubtitlesAPI_Key = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Key")!;
-        private static readonly string OpensubtitlesAPI_Username = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Username")!;
-        private static readonly string OpensubtitlesAPI_Password = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Password")!;
+        private class CheckOpensubtitlesAPI_Key
+        {
+            private static readonly string _opensubtitlesAPI_Key = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Key")!;
+            public static string OpensubtitlesAPI_Key
+            {
+                get
+                {
+                    if (_opensubtitlesAPI_Key == "Your_API_Key" || string.IsNullOrWhiteSpace(_opensubtitlesAPI_Key))
+                    {
+                        SlowPrintingText.SlowPrintText("Your Opensubtitles API key is empty. Add it in app.config file.");
+                        return null!;
+                    }
+                    return _opensubtitlesAPI_Key;
+                }
+            }
+        }
+        private class CheckOpensubtitlesAPI_Username
+        {
+            private static readonly string _opensubtitlesAPI_Username = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Username")!;
+            public static string OpensubtitlesAPI_Username
+            {
+                get
+                {
+                    if (_opensubtitlesAPI_Username == "Your_username" || string.IsNullOrWhiteSpace(_opensubtitlesAPI_Username))
+                    {
+                        SlowPrintingText.SlowPrintText("Your Opensubtitles username is empty. Add it in app.config file.");
+                        return null!;
+                    }
+                    return _opensubtitlesAPI_Username;
+                }
+            }
+        }
+        private class CheckOpensubtitlesAPI_Password
+        {
+            private static readonly string _opensubtitlesAPI_Password = ConfigurationManager.AppSettings.Get("OpensubtitlesAPI_Password")!;
+            public static string OpensubtitlesAPI_Password
+            {
+                get
+                {
+                    if (_opensubtitlesAPI_Password == "YourPassword" || string.IsNullOrWhiteSpace(_opensubtitlesAPI_Password))
+                    {
+                        SlowPrintingText.SlowPrintText("Your Opensubtitles API password is empty. Add it in app.config file.");
+                        return null!;
+                    }
+                    return _opensubtitlesAPI_Password;
+                }
+            }
+        }
         private static readonly string OpensubtitlesLoginURL = "https://api.opensubtitles.com/api/v1/login";
         private static readonly string OpensubtitlesDownloadURL = "https://api.opensubtitles.com/api/v1/download";
         private static readonly string Opensubtitles_MovieIdURL = "https://api.opensubtitles.com/api/v1/subtitles?tmdb_id=";
+
         internal static async Task<Subtitles> GetSubtitlesId(int TMDB_MovieId, string TMDB_MovieName)
         {
+            string OpensubtitlesAPI_Key = CheckOpensubtitlesAPI_Key.OpensubtitlesAPI_Key;
+            if(OpensubtitlesAPI_Key == null)
+            {return null!;} 
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Get,
@@ -65,6 +114,9 @@ namespace WordCounter
         }
         internal static async Task LoginAndDownloadSubtitles(int SubtitlesId) 
         {
+            string OpensubtitlesAPI_Key = CheckOpensubtitlesAPI_Key.OpensubtitlesAPI_Key;
+            if(OpensubtitlesAPI_Key == null)
+            {return;} 
             string User_token = await Login();
 
             if(string.IsNullOrEmpty(User_token))
@@ -126,6 +178,18 @@ namespace WordCounter
         }
         private static async Task<string> Login()
         {
+            string OpensubtitlesAPI_Key = CheckOpensubtitlesAPI_Key.OpensubtitlesAPI_Key;
+            if(OpensubtitlesAPI_Key == null)
+            {return null!;}
+
+            string OpensubtitlesAPI_Username = CheckOpensubtitlesAPI_Username.OpensubtitlesAPI_Username;
+            if(OpensubtitlesAPI_Username == null)
+            {return null!;}
+
+            string OpensubtitlesAPI_Password = CheckOpensubtitlesAPI_Password.OpensubtitlesAPI_Password;
+            if(OpensubtitlesAPI_Password == null)
+            {return null!;}
+
             var request = new HttpRequestMessage
             {
                 Method= HttpMethod.Post,

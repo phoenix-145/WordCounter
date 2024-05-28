@@ -1,4 +1,5 @@
 using System.Configuration;
+using System.Reflection.Metadata.Ecma335;
 using System.Text.Json;
 using static WordCounter.Program;
 
@@ -6,11 +7,31 @@ namespace WordCounter
 {
     public class TmdbAPI
     {
-        private protected static readonly string Tmdb_AuthToken = ConfigurationManager.AppSettings.Get("TmdbAPI_AuthToken")!;
         internal static readonly HttpClient httpClient = HttpClientFactory.httpClient;
+        private class CheckTmdb_AuthToken
+        {
+            private readonly static string _tmdbAuthToken = ConfigurationManager.AppSettings.Get("TmdbAPI_AuthToken")!;
+            public static string Tmdb_AuthToken
+            {
+                get
+                {
+                    if (_tmdbAuthToken == "YourTMDBAuthToken" || string.IsNullOrWhiteSpace(_tmdbAuthToken))
+                    {
+                        SlowPrintingText.SlowPrintText("Your TMDB authentication token is empty. Add it in app.config file.");
+                        return null!;
+                    }
+                    return _tmdbAuthToken;
+                }
+            }
+        }
         internal protected static readonly string TmdbURL = "https://api.themoviedb.org/3/search/movie";
+        
         internal static async Task<Tmdb_Response> SearchMovieinTMDB(string movieName, int page_no)
         {
+            string Tmdb_AuthToken = CheckTmdb_AuthToken.Tmdb_AuthToken;
+            if(Tmdb_AuthToken == null)
+            {return null!;}
+
             string movieName_UrlEncoded = Uri.EscapeDataString(movieName);
             string fullURI = GenerateURI(movieName_UrlEncoded, page_no);
 
