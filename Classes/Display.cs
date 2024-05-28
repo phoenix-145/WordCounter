@@ -51,7 +51,7 @@ public class DisplaySearchResults
 
         string[] MenuItemsArray = MenuItems.ToArray();
         var prompt = new StringBuilder(tmdb_Response != null ? "Choose your movie" : "Choose the subtitles file");
-        Menu menu = new(prompt.ToString(), MenuItemsArray);
+        Menu menu = tmdb_Response != null ? new(prompt.ToString(), MenuItemsArray) : new(prompt.ToString(), MenuItemsArray, subtitles!);
         dynamic input = menu.Run();
         if((input is NavigationActions) && input == NavigationActions.Exit)
         {

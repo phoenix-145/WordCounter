@@ -28,17 +28,19 @@ namespace WordCounter
         }
         private static async Task SearchMovie(string moviename)
         {
-            bool loop = true;
             int page_no = 1;
             Tmdb_Response tmdb_Response = null!;
             
-            while(loop)
+            while(true)
             {
                 DisplayBanner();
                 if(tmdb_Response == null || tmdb_Response.page != page_no)
                 {
                     tmdb_Response = await TmdbAPI.SearchMovieinTMDB(moviename, page_no);
+                    if(tmdb_Response == null)
+                    {break;}
                 }
+
                 var UserMenuChoice = DisplaySearchResults.DisplaySearchedResults(tmdb_Response, null!, page_no);
                 if((UserMenuChoice is NavigationActions) && UserMenuChoice == NavigationActions.Exit)
                 {
@@ -54,23 +56,55 @@ namespace WordCounter
                 }
                 else
                 {
-                    int CorrectMovie = DisplayMovieInfo(tmdb_Response.results![UserMenuChoice]);
-                    if(CorrectMovie == 0)
+                    NavigationActions navigationActions = await GetMoviesSubtitles(tmdb_Response, UserMenuChoice);
+                    if(navigationActions == NavigationActions.Done)
                     {
-                        DisplayBanner();
-                        Subtitles subtitles = await OpensubtitlesAPI.GetSubtitlesId(tmdb_Response.results![UserMenuChoice].id, tmdb_Response.results![UserMenuChoice].title!);
-                        if(subtitles != null)
-                        {
-                            dynamic SubtitlesChoice = DisplaySearchResults.DisplaySearchedResults(null!, subtitles, 1);
-                            if(SubtitlesChoice is not NavigationActions)
-                            {
-                                await OpensubtitlesAPI.LoginAndDownloadSubtitles(subtitles.data![SubtitlesChoice].id!);
-                                break;
-                            }
-                        }
+                        break;
                     }
                 } 
             }  
+        }
+        private static async Task<NavigationActions> GetMoviesSubtitles(Tmdb_Response tmdb_Response, int UserMenuChoice)
+        {
+            int UserChoice = DisplayMovieInfo(tmdb_Response.results![UserMenuChoice]);
+            if(UserChoice == 0)
+            {
+                Subtitles subtitles = await OpensubtitlesAPI.GetSubtitlesId(tmdb_Response.results![UserMenuChoice].id, tmdb_Response.results![UserMenuChoice].title!);
+                if(subtitles != null)
+                {
+                    while(true)
+                    {
+                        Console.Clear();
+                        DisplayBanner();
+                        dynamic SubtitlesChoice = DisplaySearchResults.DisplaySearchedResults(null!, subtitles, 1);
+                        if(SubtitlesChoice is not NavigationActions)
+                        {
+                            Console.WriteLine("\n");
+                            string prompt = "Are you sure ?";
+                            string[] Options = {"Yes", "No"};
+                            Menu menu = new(prompt, Options);
+                            int input = menu.Run();
+                            if(input == 0)
+                            {
+                                await OpensubtitlesAPI.LoginAndDownloadSubtitles(subtitles!.data![SubtitlesChoice]!.attributes!.files![0]!.file_id!);
+                                return NavigationActions.Done;
+                            }
+                        }
+                        else
+                        {
+                            return NavigationActions.Exit;
+                        }
+                    }
+                }
+                else
+                {
+                    return NavigationActions.Exit;
+                }
+            }
+            else
+            {
+                return NavigationActions.Exit;
+            }
         }
         private static int DisplayMovieInfo(Tmdb_Response.Result tmdb_Response)
         {
