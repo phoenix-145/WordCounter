@@ -14,7 +14,6 @@ namespace WordCounter
         private static readonly string OpensubtitlesLoginURL = "https://api.opensubtitles.com/api/v1/login";
         private static readonly string OpensubtitlesDownloadURL = "https://api.opensubtitles.com/api/v1/download";
         private static readonly string Opensubtitles_MovieIdURL = "https://api.opensubtitles.com/api/v1/subtitles?tmdb_id=";
-        
         internal static async Task<Subtitles> GetSubtitlesId(int TMDB_MovieId, string TMDB_MovieName)
         {
             var request = new HttpRequestMessage
@@ -27,38 +26,44 @@ namespace WordCounter
                     { "Api-Key", $"{OpensubtitlesAPI_Key}" },
                 }
             };
-
-            using var response = await httpClient.SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var response_body = await response.Content.ReadAsStringAsync();
-                if(!string.IsNullOrEmpty(response_body))
+                using var response = await httpClient.SendAsync(request);
+                if (response.IsSuccessStatusCode)
                 {
-                    Subtitles subtitles = JsonSerializer.Deserialize<Subtitles>(response_body)!;
-                    if(subtitles.data!.Length > 0)
+                    var response_body = await response.Content.ReadAsStringAsync();
+                    if(!string.IsNullOrEmpty(response_body))
                     {
-                        return subtitles;
+                        Subtitles subtitles = JsonSerializer.Deserialize<Subtitles>(response_body)!;
+                        if(subtitles.data!.Length > 0)
+                        {
+                            return subtitles;
+                        }
+                        else
+                        {
+                            SlowPrintingText.SlowPrintText($"No subtitles for {TMDB_MovieName} found. Press Enter to continue.");
+                            Console.ReadLine();
+                            return null!;
+                        }
                     }
                     else
                     {
-                        SlowPrintingText.SlowPrintText($"No subtitles for {TMDB_MovieName} found. Press Enter to continue.");
-                        Console.ReadLine();
+                        Console.WriteLine("The server returned a bad response.");
                         return null!;
                     }
                 }
                 else
                 {
-                    Console.WriteLine("The server returned a bad response.");
+                    Console.WriteLine("Error. Something went wrong when retrieving the subtitles Id.");
                     return null!;
                 }
             }
-            else
-            {
-                Console.WriteLine("Error. Something went wrong when retrieving the subtitles Id.");
-                return null!;
-            }
+            catch (TaskCanceledException)
+            {SlowPrintingText.SlowPrintText("API call timed out. API service may be down."); return null!; }
+            catch (HttpRequestException)
+            {SlowPrintingText.SlowPrintText("Error : no internet connection."); return null!; }
         }
-        internal static async Task LoginAndDownloadSubtitles(string SubtitlesId)
+        internal static async Task LoginAndDownloadSubtitles(int SubtitlesId) 
         {
             string User_token = await Login();
 
@@ -87,30 +92,36 @@ namespace WordCounter
                     }
                 }
             };
-
-            using var response = await httpClient.SendAsync(request);
-            if(response.IsSuccessStatusCode)
+            try
             {
-                var response_body = await response.Content.ReadAsStringAsync();
-                if(!string.IsNullOrEmpty(response_body))
+                using var response = await httpClient.SendAsync(request);
+                if(response.IsSuccessStatusCode)
                 {
-                    Download download_response = JsonSerializer.Deserialize<Download>(response_body)!;
+                    var response_body = await response.Content.ReadAsStringAsync();
+                    if(!string.IsNullOrEmpty(response_body))
+                    {
+                        Download download_response = JsonSerializer.Deserialize<Download>(response_body)!;
 
-                    SlowPrintingText.SlowPrintText("\nSuccessfully retrieved download information.\n");
-                    SlowPrintingText.SlowPrintText($"You have made {download_response.requests} requests. You have {download_response.remaining} downloads remaining in this account.");
-                    SlowPrintingText.SlowPrintText(download_response.message!);
-
-                    await DownloadSubtitles(download_response.link!, download_response.file_name!);
+                        SlowPrintingText.SlowPrintText("\nSuccessfully retrieved download information.\n");
+                        SlowPrintingText.SlowPrintText($"You have made {download_response.requests} requests. You have {download_response.remaining} downloads remaining in this account.");
+                        SlowPrintingText.SlowPrintText(download_response.message!);
+                        
+                        await DownloadSubtitles(download_response.link!, download_response.file_name!);
+                    }
+                    else 
+                    {
+                        SlowPrintingText.SlowPrintText("Error. the server returned a bad response when requesting for download.");
+                    }
                 }
-                else 
+                else
                 {
-                    SlowPrintingText.SlowPrintText("Error. the server returned a bad response when requesting for download.");
+                    SlowPrintingText.SlowPrintText("Error. something went wrong when retrieving download information. Error code : " + response.StatusCode);
                 }
             }
-            else
-            {
-                SlowPrintingText.SlowPrintText("Error. something went wrong when retrieving download information. Error code : " + response.StatusCode);
-            }
+            catch (TaskCanceledException)
+            {SlowPrintingText.SlowPrintText("API call timed out. API service may be down.");}
+                        catch (HttpRequestException)
+            {SlowPrintingText.SlowPrintText("Error : no internet connection."); }
 
         }
         private static async Task<string> Login()
@@ -133,29 +144,35 @@ namespace WordCounter
                     }
                 }
             };
-
-            using var response = await httpClient.SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var response_body = await response.Content.ReadAsStringAsync();
-
-                if (!string.IsNullOrEmpty(response_body))
+                using var response = await httpClient.SendAsync(request);
+                if (response.IsSuccessStatusCode)
                 {
-                    Login login_response = JsonSerializer.Deserialize<Login>(response_body)!;
-                    SlowPrintingText.SlowPrintText($"\nSuccessfully logged into {OpensubtitlesAPI_Username}. \nYou have {login_response.user!.allowed_downloads} downloads left on this account.");
-                    return login_response.token!;
+                    var response_body = await response.Content.ReadAsStringAsync();
+
+                    if (!string.IsNullOrEmpty(response_body))
+                    {
+                        Login login_response = JsonSerializer.Deserialize<Login>(response_body)!;
+                        SlowPrintingText.SlowPrintText($"\nSuccessfully logged into Opensubtitles as {OpensubtitlesAPI_Username}. \nYou have {login_response.user!.allowed_downloads} downloads left on this account.");
+                        return login_response.token!;
+                    }
+                    else
+                    {
+                        SlowPrintingText.SlowPrintText("Error. Something went wrong when. The server returned a bad response.");
+                        return null!;
+                    }
                 }
                 else
                 {
-                    SlowPrintingText.SlowPrintText("Error. Something went wrong when. The server returned a bad response.");
+                    SlowPrintingText.SlowPrintText("Error. Something went wrong when logging in. Error code : " + response.StatusCode);
                     return null!;
                 }
             }
-            else
-            {
-                SlowPrintingText.SlowPrintText("Error. Something went wrong when logging in. Error code : " + response.StatusCode);
-                return null!;
-            }
+            catch (TaskCanceledException)
+            {SlowPrintingText.SlowPrintText("API call timed out. API service may be down."); return null!; }
+            catch (HttpRequestException)
+            {SlowPrintingText.SlowPrintText("Error : no internet connection."); return null!; }
         }
         private static async Task DownloadSubtitles(string DownloadURL, string filename)
         {
@@ -167,12 +184,19 @@ namespace WordCounter
 
                 using (var fileStream = new FileStream(filepathtodownload, FileMode.Create))
                 {
-                    HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(DownloadURL);
-                    using Stream contentStream = await httpResponseMessage.Content.ReadAsStreamAsync();
-                    await contentStream.CopyToAsync(fileStream);
+                    try
+                    {
+                        HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(DownloadURL);
+                        using Stream contentStream = await httpResponseMessage.Content.ReadAsStreamAsync();
+                        await contentStream.CopyToAsync(fileStream);
+                    }
+                    catch(TaskCanceledException)
+                    {SlowPrintingText.SlowPrintText("API call timed out. API service may be down.");}
+                    catch (HttpRequestException)
+                    {SlowPrintingText.SlowPrintText("Error : no internet connection."); }
                 }
-
                 SlowPrintingText.SlowPrintText("Download was successful.");
+                filepathofdownloadedsubtitle = filepathtodownload;
             }
             catch (Exception ex)
             {

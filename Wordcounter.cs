@@ -46,18 +46,13 @@ namespace WordCounter
             ReadFromFile(input!);
             WriteToFile(); 
         }
-        private static void ReadFromFile(string path)
+        internal static void ReadFromFile(string path)
         {
             using(StreamReader reader = new StreamReader(path))
             {
                 string rawtext = reader.ReadToEnd().ToLower();
-                string filtertext = Regex.Replace(rawtext, @"[^a-zA-Z0-9\s']", "");
-                string[] split_text = filtertext.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-                foreach (string line in split_text)
-                {
-                    Console.WriteLine(line);
-                }
-                Console.ReadLine();
+                string filteredtext = FilterScript(rawtext);
+                string[] split_text = filteredtext.Split(" ", StringSplitOptions.RemoveEmptyEntries);
 
                 foreach(string word in split_text)
                 {
@@ -72,18 +67,18 @@ namespace WordCounter
                 }
             }
         }
-        private static void WriteToFile()
+        internal static void WriteToFile()
         {
-            string FileToWriteTo;
+            string FileToWriteOutputTo;
 
             Console.Write("Enter your output file path(default : Output.txt) : ");
-            FileToWriteTo = Console.ReadLine()!;
+            FileToWriteOutputTo = Console.ReadLine()!;
 
-            if(FileToWriteTo == "")
+            if(FileToWriteOutputTo == "")
             {
-                FileToWriteTo = @"TextFiles\Output.txt";
+                FileToWriteOutputTo = @"TextFiles\Output.txt";
             }
-            if(!File.Exists(FileToWriteTo))
+            if(!File.Exists(FileToWriteOutputTo))
             {
                 string prompt = @"The stated file does not exist. Would you like to enter the path again or use default path (TextFiles\Output.txt) ? ";
                 string[] options = {"Enter Again", "Use default path", "Create a new text file at the specified path"};
@@ -96,17 +91,17 @@ namespace WordCounter
                         WriteToFile();
                         return;
                     case 1:
-                        FileToWriteTo = @"TextFiles\Output.txt";
+                        FileToWriteOutputTo = @"TextFiles\Output.txt";
                         break;
                     case 2:
-                        FileToWriteTo += ".txt";
+                        FileToWriteOutputTo += ".txt";
                         break;
                 }
             }
 
             try
             {
-                using(StreamWriter writer = new StreamWriter(FileToWriteTo))
+                using(StreamWriter writer = new StreamWriter(FileToWriteOutputTo))
                 {
                     var OrderedWordsWithCount = WordsWithCount.OrderByDescending(x => x.Value); 
                     foreach(var word in OrderedWordsWithCount)
@@ -114,6 +109,7 @@ namespace WordCounter
                         writer.WriteLine($"{word.Key} : {word.Value}");
                     } 
                 }
+                WordsWithCount.Clear();
             }
             catch(Exception ex)
             {
@@ -122,7 +118,7 @@ namespace WordCounter
                 return;
             }
                 
-            SlowPrintingText.SlowPrintText($"The output has been successfully written in {FileToWriteTo}."); 
+            SlowPrintingText.SlowPrintText($"The output has been successfully written in {FileToWriteOutputTo}."); 
         }
         private static string GetFileType(string input)
         {
@@ -139,6 +135,17 @@ namespace WordCounter
             }
             return filetype;
         }
+        private static string FilterScript(string rawtext)
+        {
+            string filteredtext;
+
+            string Removetimestamps = Regex.Replace(rawtext, @"\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}", "");
+            string Removetags = Regex.Replace(Removetimestamps, @"<.*?>", "");
+            string filtertext = Regex.Replace(Removetags, @"[^a-zA-Z\s']", "");
+            string Removewhitespace = Regex.Replace(filtertext, @"\s+", " ").Trim();
+
+            filteredtext = Removewhitespace;
+            return filteredtext;
+        }
     }
-    
 }

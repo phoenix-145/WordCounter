@@ -6,7 +6,7 @@ namespace WordCounter
 {
     public class TmdbAPI
     {
-        internal protected static readonly string Tmdb_AuthToken = ConfigurationManager.AppSettings.Get("TmdbAPI_AuthToken")!;
+        private protected static readonly string Tmdb_AuthToken = ConfigurationManager.AppSettings.Get("TmdbAPI_AuthToken")!;
         internal static readonly HttpClient httpClient = HttpClientFactory.httpClient;
         internal protected static readonly string TmdbURL = "https://api.themoviedb.org/3/search/movie";
         internal static async Task<Tmdb_Response> SearchMovieinTMDB(string movieName, int page_no)
@@ -24,27 +24,33 @@ namespace WordCounter
                     { "Authorization", $"Bearer {Tmdb_AuthToken}" },
                 }
             };
-
-            using var response = await httpClient.SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var response_body = await response.Content.ReadAsStringAsync();
-                if (!string.IsNullOrEmpty(response_body))
+                using var response = await httpClient.SendAsync(request);
+                if (response.IsSuccessStatusCode)
                 {
-                    Tmdb_Response tmdb_Response = JsonSerializer.Deserialize<Tmdb_Response>(response_body)!;
-                    return tmdb_Response;
+                    var response_body = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(response_body))
+                    {
+                        Tmdb_Response tmdb_Response = JsonSerializer.Deserialize<Tmdb_Response>(response_body)!;
+                        return tmdb_Response;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error. the server returned a bad response.");
+                        return null!;
+                    }
                 }
                 else
                 {
-                    Console.WriteLine($"Error. the server returned a bad response.");
+                    SlowPrintingText.SlowPrintText($"Error. Something went wrong while searching for movie. Status : " + response.StatusCode);
                     return null!;
                 }
             }
-            else
-            {
-                SlowPrintingText.SlowPrintText($"Error. Something went wrong while searching for movie. Status : " + response.StatusCode);
-                return null!;
-            }
+            catch (TaskCanceledException)
+            {SlowPrintingText.SlowPrintText("API call timed out. API service may be down."); return null!; }
+            catch (HttpRequestException)
+            {SlowPrintingText.SlowPrintText("Error : no internet connection."); return null!; }
         }
         private static string GenerateURI(string movieName, int page_no)
         {
